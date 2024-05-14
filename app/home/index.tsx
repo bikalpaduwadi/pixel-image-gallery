@@ -1,8 +1,7 @@
-import { theme } from "@/constants/theme";
-import { hp, wp } from "@/helper/common";
-import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -11,14 +10,22 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { hp, wp } from "@/helper/common";
+import { theme } from "@/constants/theme";
+import Categoreis from "@/components/Categoreis";
 
 const HomeScreen = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("");
   const searchInputRef = useRef(null);
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
+
+  const handleCategorySelection = (category: string) => {
+    setActiveCategory(category);
+  };
 
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -61,6 +68,14 @@ const HomeScreen = () => {
               />
             </Pressable>
           )}
+        </View>
+
+        {/* categories */}
+        <View>
+          <Categoreis
+            activeCategory={activeCategory}
+            handleCategorySelection={handleCategorySelection}
+          />
         </View>
       </ScrollView>
     </View>
