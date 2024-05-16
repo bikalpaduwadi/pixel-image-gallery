@@ -2,8 +2,8 @@ import React from "react";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet } from "react-native";
 
-import { getImageSize } from "@/helper/common";
 import { theme } from "@/constants/theme";
+import { getImageSize, wp } from "@/helper/common";
 
 const ImageCard = ({
   image,
@@ -19,8 +19,12 @@ const ImageCard = ({
     return { height: getImageSize(height, width) };
   };
 
+  const isLastInRow = () => {
+    return (index + 1) % columns === 0;
+  };
+
   return (
-    <Pressable style={[styles.imageWrapper]}>
+    <Pressable style={[styles.imageWrapper, !isLastInRow() && styles.spacing]}>
       <Image
         style={[styles.image, getImageHeight()]}
         source={image.webformatURL}
@@ -39,5 +43,12 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     backgroundColor: theme.colors.grayBG,
+    borderRadius: theme.radius.xl,
+    borderCurve: "continuous",
+    overflow: "hidden",
+    marginBottom: wp(2),
+  },
+  spacing: {
+    marginRight: wp(2),
   },
 });
