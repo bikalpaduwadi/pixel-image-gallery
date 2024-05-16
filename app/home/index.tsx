@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import {
@@ -11,17 +11,36 @@ import {
   ScrollView,
 } from "react-native";
 
+import { fetchImages } from "@/api";
 import { hp, wp } from "@/helper/common";
 import { theme } from "@/constants/theme";
 import Categoreis from "@/components/Categoreis";
+import ImageGrid from "@/components/ImageGrid";
 
 const HomeScreen = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState("");
   const searchInputRef = useRef(null);
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
+
+  const getImages = async (params = { page: 1 }, append = false) => {
+    const res = await fetchImages(params);
+    if (res.data?.hits && res.data?.hits?.length && !res.isError) {
+      console.log("data", res.data.hits[0]);
+      if (append) {
+        setImages([...images, ...res.data.hits]);
+      } else {
+        setImages([...res.data.hits]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getImages();
+  }, []);
 
   const handleCategorySelection = (category: string) => {
     setActiveCategory(category);
@@ -77,6 +96,9 @@ const HomeScreen = () => {
             handleCategorySelection={handleCategorySelection}
           />
         </View>
+
+        {/* images masonary grid view  */}
+        <View>{images.length > 0 && <ImageGrid images={images} />}</View>
       </ScrollView>
     </View>
   );
