@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { debounce } from "lodash";
-import React, { LegacyRef, useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import {
@@ -44,30 +44,50 @@ const HomeScreen = () => {
 
   const handleCategorySelection = (category: string) => {
     setActiveCategory(category);
+    setImages([]);
+    clearSearch();
+
+    if (category === activeCategory) {
+      setActiveCategory("");
+      handleSearch("");
+      return;
+    }
+
+    let params: any = {
+      page: 1,
+    };
+
+    if (category) {
+      params.category = category;
+    }
+
+    getImages(params);
   };
 
   const handleSearch = (text: string) => {
     setSearch(text);
 
     if (text.length > 2 || !text) {
+      setActiveCategory("");
       setImages([]);
-      const param = { page: 1, q: text.toLowerCase() || ''}
+      const param = { page: 1, q: text.toLowerCase() || "" };
       getImages(param);
     }
-
   };
 
   const debounceSearch = useCallback(debounce(handleSearch, 200), []);
 
-  const onClearSearch = () => {
-    setSearch('');
+  const clearSearch = (reset: boolean = false) => {
+    setSearch("");
 
     if (searchInputRef.current) {
       searchInputRef.current.clear();
     }
 
-    handleSearch('');
-  }
+    if (reset) {
+      handleSearch("");
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -102,7 +122,10 @@ const HomeScreen = () => {
             style={styles.searchInput}
           />
           {search && (
-            <Pressable onPress={onClearSearch} style={styles.closeIcon}>
+            <Pressable
+              onPress={() => clearSearch(true)}
+              style={styles.closeIcon}
+            >
               <Ionicons
                 name="close"
                 size={24}
