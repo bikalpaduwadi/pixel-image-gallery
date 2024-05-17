@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { debounce } from "lodash";
+import React, { LegacyRef, useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import {
@@ -22,18 +23,17 @@ const HomeScreen = () => {
   const [search, setSearch] = useState("");
   const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState("");
-  const searchInputRef = useRef(null);
+  const searchInputRef = useRef<TextInput>(null);
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
 
   const getImages = async (params = { page: 1 }, append = false) => {
     const res = await fetchImages(params);
-    if (res.data?.hits && res.data?.hits?.length && !res.isError) {
-      console.log("data", res.data.hits[0]);
+    if (res.data && res.data?.length && !res.isError) {
       if (append) {
-        setImages([...images, ...res.data.hits]);
+        setImages([...images, ...res.data]);
       } else {
-        setImages([...res.data.hits]);
+        setImages([...res.data]);
       }
     }
   };
@@ -45,6 +45,29 @@ const HomeScreen = () => {
   const handleCategorySelection = (category: string) => {
     setActiveCategory(category);
   };
+
+  const handleSearch = (text: string) => {
+    setSearch(text);
+
+    if (text.length > 2 || !text) {
+      setImages([]);
+      const param = { page: 1, q: text.toLowerCase() || ''}
+      getImages(param);
+    }
+
+  };
+
+  const debounceSearch = useCallback(debounce(handleSearch, 200), []);
+
+  const onClearSearch = () => {
+    setSearch('');
+
+    if (searchInputRef.current) {
+      searchInputRef.current.clear();
+    }
+
+    handleSearch('');
+  }
 
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -72,14 +95,14 @@ const HomeScreen = () => {
             />
           </View>
           <TextInput
-            value={search}
+            // value={search}
             ref={searchInputRef}
-            onChangeText={(value) => setSearch(value)}
+            onChangeText={debounceSearch}
             placeholder="Search images..."
             style={styles.searchInput}
           />
           {search && (
-            <Pressable onPress={() => setSearch("")} style={styles.closeIcon}>
+            <Pressable onPress={onClearSearch} style={styles.closeIcon}>
               <Ionicons
                 name="close"
                 size={24}
