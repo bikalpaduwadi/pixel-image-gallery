@@ -21,13 +21,16 @@ import ImageGrid from "@/components/ImageGrid";
 import FilterModal from "@/components/filter/FilterModal";
 
 const HomeScreen = () => {
+  let page = 1;
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState("");
   const searchInputRef = useRef<TextInput>(null);
   const refFilterModal = useRef(null);
+  const scrollRef = useRef(null);
   const [filters, setFilters] = useState(null);
+  const [isBottomReached, setIsBottomReached] = useState(false);
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
 
@@ -57,8 +60,10 @@ const HomeScreen = () => {
       return;
     }
 
+    page = 1;
+
     let params: any = {
-      page: 1,
+      page,
       ...(filters || {}),
     };
 
@@ -75,8 +80,9 @@ const HomeScreen = () => {
     if (text.length > 2 || !text) {
       setActiveCategory("");
       setImages([]);
+      page = 1;
       const param = {
-        page: 1,
+        page,
         q: text.toLowerCase() || "",
         ...(filters || {}),
       };
@@ -109,8 +115,9 @@ const HomeScreen = () => {
   const applyFilters = () => {
     if (filters) {
       setImages([]);
+      page = 1;
       let params = {
-        page: 1,
+        page,
         ...(filters as any),
       };
 
@@ -131,8 +138,9 @@ const HomeScreen = () => {
     if (filters) {
       setFilters(null);
       setImages([]);
+      page = 1;
       let params: any = {
-        page: 1,
+        page,
       };
 
       if (activeCategory) {
@@ -156,8 +164,9 @@ const HomeScreen = () => {
 
       // Todo: place following logic in a reuseable funtion
       setImages([]);
+      page = 1;
       let params = {
-        page: 1,
+        page,
         ...currentFilters,
       };
 
@@ -173,11 +182,47 @@ const HomeScreen = () => {
     }
   };
 
+  const handlScroll = (event: any) => {
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+    const scrollOffset = event.nativeEvent.contentOffset.y;
+    const bottomPosition = contentHeight - scrollViewHeight;
+
+    if (scrollOffset >= bottomPosition - 1) {
+      if (!isBottomReached) {
+        setIsBottomReached(true);
+        ++page;
+        let params: any = { page, ...(filters || {}) };
+
+        if (activeCategory) {
+          params.category = activeCategory;
+        }
+
+        if (search) {
+          params.q = search;
+        }
+
+        getImages(params, true);
+      }
+    } else if (isBottomReached) {
+      setIsBottomReached(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      (scrollRef.current as any).scrollTo({
+        y: 0,
+        animated: true,
+      });
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop }]}>
       {/* header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.push("/")}>
+        <Pressable onPress={scrollToTop}>
           <Text style={styles.title}>Gallery</Text>
         </Pressable>
         <Pressable onPress={() => openFilterModel()}>
@@ -188,7 +233,12 @@ const HomeScreen = () => {
           ></FontAwesome6>
         </Pressable>
       </View>
-      <ScrollView contentContainerStyle={{ gap: 15 }}>
+      <ScrollView
+        onScroll={handlScroll}
+        scrollEventThrottle={5}
+        ref={scrollRef}
+        contentContainerStyle={{ gap: 15 }}
+      >
         {/* search bar */}
         <View style={styles.searchBar}>
           <View style={styles.searchIcon}>
