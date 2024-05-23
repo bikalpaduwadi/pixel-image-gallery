@@ -1,6 +1,7 @@
 import React from "react";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet } from "react-native";
+import { ExpoRouter } from "expo-router/types/expo-router";
 
 import { theme } from "@/constants/theme";
 import { getImageSize, wp } from "@/helper/common";
@@ -8,11 +9,13 @@ import { getImageSize, wp } from "@/helper/common";
 const ImageCard = ({
   image,
   index,
+  router,
   columns,
 }: {
   image: any;
   index: number;
   columns: number;
+  router: ExpoRouter.Router;
 }) => {
   const getImageHeight = () => {
     let { imageHeight: height, imageWidth: width } = image;
@@ -24,7 +27,12 @@ const ImageCard = ({
   };
 
   return (
-    <Pressable style={[styles.imageWrapper, !isLastInRow() && styles.spacing]}>
+    <Pressable
+      onPress={() =>
+        router.push({ pathname: "home/image", params: { ...image } })
+      }
+      style={[styles.imageWrapper, !isLastInRow() && styles.spacing]}
+    >
       <Image
         style={[styles.image, getImageHeight()]}
         source={image.webformatURL}

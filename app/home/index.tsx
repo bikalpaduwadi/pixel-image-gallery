@@ -318,7 +318,9 @@ const HomeScreen = () => {
         )}
 
         {/* images masonary grid view  */}
-        <View>{images.length > 0 && <ImageGrid images={images} />}</View>
+        <View>
+          {images.length > 0 && <ImageGrid images={images} router={router} />}
+        </View>
 
         {/* Loader  */}
         <View
