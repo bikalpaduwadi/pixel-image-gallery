@@ -3,10 +3,11 @@ import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
+import Toast from "react-native-toast-message";
 import {
   StyleSheet,
-  Button,
   View,
+  Text,
   Platform,
   ActivityIndicator,
   Pressable,
@@ -49,14 +50,31 @@ const ImageScreen = () => {
   };
 
   const handleDownloadImage = async () => {
+    if (Platform.OS === "web") {
+      const anchorElement = document.createElement("a");
+      anchorElement.href = imageUrl;
+      anchorElement.target = "_blank";
+      anchorElement.download = fileName || "download";
+      document.body.appendChild(anchorElement);
+      anchorElement.click();
+      document.body.removeChild(anchorElement);
+      return;
+    }
+
     setStatus("downloading");
     const uri = await downloadFile();
 
     if (uri) {
-      console.log("Downloaded url", uri);
+      showToast("Image downloaded");
     }
   };
   const handleShareImage = async () => {
+    if (Platform.OS === "web") {
+      navigator.clipboard.writeText(imageUrl);
+      showToast("Image link copied");
+      return;
+    }
+
     setStatus("sharing");
     const uri = await downloadFile();
 
@@ -77,6 +95,24 @@ const ImageScreen = () => {
     } finally {
       setStatus("");
     }
+  };
+
+  const showToast = (message: string) => {
+    Toast.show({
+      type: "success",
+      text1: message,
+      position: "bottom",
+    });
+  };
+
+  const toastConfig = {
+    success: ({ text1, props, ...rest }: any) => {
+      return (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>{text1}</Text>
+        </View>
+      );
+    },
   };
 
   return (
@@ -119,11 +155,12 @@ const ImageScreen = () => {
             </View>
           ) : (
             <Pressable style={styles.button} onPress={handleShareImage}>
-              <Entypo name="share" size={2} color="white" />
+              <Entypo name="share" size={24} color="white" />
             </Pressable>
           )}
         </Animated.View>
       </View>
+      <Toast config={toastConfig} visibilityTime={2500} />
     </BlurView>
   );
 };
@@ -165,5 +202,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: theme.radius.lg,
     borderCurve: "continuous",
+  },
+  toast: {
+    padding: 15,
+    paddingHorizontal: 30,
+    borderRadius: theme.radius.xl,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  toastText: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fontWeights.semibold as any,
+    color: theme.colors.white,
   },
 });

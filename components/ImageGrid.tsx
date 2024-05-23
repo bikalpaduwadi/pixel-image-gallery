@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { MasonryFlashList } from "@shopify/flash-list";
+
 import ImageCard from "./ImageCard";
 import { wp, getColumnCount } from "@/helper/common";
 import { ExpoRouter } from "expo-router/types/expo-router";
